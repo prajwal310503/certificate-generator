@@ -10,20 +10,25 @@ export default function CalendarPicker({ value, onChange, placeholder = 'Pick da
   const dark = theme === 'dark';
   const today = new Date();
   const parsed = value ? new Date(value + 'T00:00:00') : null;
+
   const [open, setOpen]           = useState(false);
+  const [calView, setCalView]     = useState('day'); // 'day' | 'month' | 'year'
   const [viewYear, setViewYear]   = useState(parsed?.getFullYear() || today.getFullYear());
   const [viewMonth, setViewMonth] = useState(parsed?.getMonth() ?? today.getMonth());
+  const [yearPage, setYearPage]   = useState(Math.floor((parsed?.getFullYear() || today.getFullYear()) / 16) * 16);
   const ref = useRef(null);
 
   useEffect(() => {
-    const fn = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    const fn = (e) => { if (ref.current && !ref.current.contains(e.target)) { setOpen(false); setCalView('day'); } };
     document.addEventListener('mousedown', fn);
     return () => document.removeEventListener('mousedown', fn);
   }, []);
 
+  // ── Navigation ─────────────────────────────────────────────────
   const prevM = () => { if (viewMonth === 0) { setViewMonth(11); setViewYear((y) => y - 1); } else setViewMonth((m) => m - 1); };
   const nextM = () => { if (viewMonth === 11) { setViewMonth(0); setViewYear((y) => y + 1); } else setViewMonth((m) => m + 1); };
 
+  // ── Day grid ────────────────────────────────────────────────────
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
   const firstDay    = new Date(viewYear, viewMonth, 1).getDay();
   const offset      = firstDay === 0 ? 6 : firstDay - 1;
@@ -38,13 +43,22 @@ export default function CalendarPicker({ value, onChange, placeholder = 'Pick da
   const isToday    = (d) => !!d && today.getFullYear() === viewYear && today.getMonth() === viewMonth && today.getDate() === d;
   const isDisabled = (d) => { if (!d) return true; const s = toStr(d); return (minDate && s < minDate) || (maxDate && s > maxDate); };
 
-  const handleDay = (d) => { if (!d || isDisabled(d)) return; onChange(toStr(d)); setOpen(false); };
+  const handleDay = (d) => { if (!d || isDisabled(d)) return; onChange(toStr(d)); setOpen(false); setCalView('day'); };
   const goToday   = () => {
     const s = `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
     if ((!minDate || s >= minDate) && (!maxDate || s <= maxDate)) onChange(s);
-    setViewYear(today.getFullYear()); setViewMonth(today.getMonth()); setOpen(false);
+    setViewYear(today.getFullYear()); setViewMonth(today.getMonth());
+    setYearPage(Math.floor(today.getFullYear() / 16) * 16);
+    setOpen(false); setCalView('day');
   };
 
+  // ── Year grid (16 years per page) ───────────────────────────────
+  const years = Array.from({ length: 16 }, (_, i) => yearPage + i);
+
+  const handleSelectYear = (y) => { setViewYear(y); setCalView('month'); };
+  const handleSelectMonth = (m) => { setViewMonth(m); setCalView('day'); };
+
+  // ── Display ────────────────────────────────────────────────────
   const displayVal = parsed
     ? `${pad(parsed.getDate())} ${CAL_MONTHS[parsed.getMonth()].slice(0,3)} ${parsed.getFullYear()}`
     : null;
@@ -52,11 +66,98 @@ export default function CalendarPicker({ value, onChange, placeholder = 'Pick da
   const active = !!value;
   const activeColor = dark ? '#60a5fa' : '#2563eb';
 
+  // ── Header nav for each view ────────────────────────────────────
+  const headerNav = () => {
+    if (calView === 'year') return (
+      <div className="flex items-center justify-between mb-2.5">
+        <button type="button" onClick={() => setYearPage((p) => p - 16)}
+          className="p-1.5 rounded-lg transition-colors"
+          style={{ color: activeColor }}
+          onMouseEnter={(e) => e.currentTarget.style.background = dark ? 'rgba(255,255,255,0.08)' : 'rgba(37,99,235,0.06)'}
+          onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+          <ChevronLeft size={14} />
+        </button>
+        <span className="text-xs font-bold" style={{ color: dark ? 'rgba(255,255,255,0.85)' : '#334155' }}>
+          {yearPage} – {yearPage + 15}
+        </span>
+        <button type="button" onClick={() => setYearPage((p) => p + 16)}
+          className="p-1.5 rounded-lg transition-colors"
+          style={{ color: activeColor }}
+          onMouseEnter={(e) => e.currentTarget.style.background = dark ? 'rgba(255,255,255,0.08)' : 'rgba(37,99,235,0.06)'}
+          onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+          <ChevronRight size={14} />
+        </button>
+      </div>
+    );
+
+    if (calView === 'month') return (
+      <div className="flex items-center justify-between mb-2.5">
+        <button type="button" onClick={() => setViewYear((y) => y - 1)}
+          className="p-1.5 rounded-lg transition-colors"
+          style={{ color: activeColor }}
+          onMouseEnter={(e) => e.currentTarget.style.background = dark ? 'rgba(255,255,255,0.08)' : 'rgba(37,99,235,0.06)'}
+          onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+          <ChevronLeft size={14} />
+        </button>
+        <button type="button" onClick={() => { setYearPage(Math.floor(viewYear / 16) * 16); setCalView('year'); }}
+          className="text-xs font-bold px-2 py-0.5 rounded-lg transition-colors"
+          style={{ color: dark ? 'rgba(255,255,255,0.85)' : '#334155' }}
+          onMouseEnter={(e) => e.currentTarget.style.background = dark ? 'rgba(255,255,255,0.08)' : 'rgba(37,99,235,0.06)'}
+          onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+          {viewYear}
+        </button>
+        <button type="button" onClick={() => setViewYear((y) => y + 1)}
+          className="p-1.5 rounded-lg transition-colors"
+          style={{ color: activeColor }}
+          onMouseEnter={(e) => e.currentTarget.style.background = dark ? 'rgba(255,255,255,0.08)' : 'rgba(37,99,235,0.06)'}
+          onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+          <ChevronRight size={14} />
+        </button>
+      </div>
+    );
+
+    // day view
+    return (
+      <div className="flex items-center justify-between mb-2.5">
+        <button type="button" onClick={prevM}
+          className="p-1.5 rounded-lg transition-colors"
+          style={{ color: activeColor }}
+          onMouseEnter={(e) => e.currentTarget.style.background = dark ? 'rgba(255,255,255,0.08)' : 'rgba(37,99,235,0.06)'}
+          onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+          <ChevronLeft size={14} />
+        </button>
+        <div className="flex items-center gap-1">
+          <button type="button" onClick={() => setCalView('month')}
+            className="text-xs font-bold px-1.5 py-0.5 rounded-lg transition-colors"
+            style={{ color: dark ? 'rgba(255,255,255,0.85)' : '#334155' }}
+            onMouseEnter={(e) => e.currentTarget.style.background = dark ? 'rgba(255,255,255,0.08)' : 'rgba(37,99,235,0.06)'}
+            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+            {CAL_MONTHS[viewMonth]}
+          </button>
+          <button type="button" onClick={() => { setYearPage(Math.floor(viewYear / 16) * 16); setCalView('year'); }}
+            className="text-xs font-bold px-1.5 py-0.5 rounded-lg transition-colors"
+            style={{ color: dark ? 'rgba(255,255,255,0.85)' : '#334155' }}
+            onMouseEnter={(e) => e.currentTarget.style.background = dark ? 'rgba(255,255,255,0.08)' : 'rgba(37,99,235,0.06)'}
+            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+            {viewYear}
+          </button>
+        </div>
+        <button type="button" onClick={nextM}
+          className="p-1.5 rounded-lg transition-colors"
+          style={{ color: activeColor }}
+          onMouseEnter={(e) => e.currentTarget.style.background = dark ? 'rgba(255,255,255,0.08)' : 'rgba(37,99,235,0.06)'}
+          onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+          <ChevronRight size={14} />
+        </button>
+      </div>
+    );
+  };
+
   return (
     <div ref={ref} style={{ position: 'relative', display: fullWidth ? 'block' : 'inline-block' }}>
       <button
         type="button"
-        onClick={() => setOpen((s) => !s)}
+        onClick={() => { setOpen((s) => !s); setCalView('day'); }}
         className={
           fullWidth
             ? 'w-full inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200'
@@ -112,62 +213,105 @@ export default function CalendarPicker({ value, onChange, placeholder = 'Pick da
           }}
         >
           {/* Header */}
-          <div className="flex items-center justify-between mb-2.5">
-            <button type="button" onClick={prevM}
-              className="p-1.5 rounded-lg transition-colors"
-              style={{ color: activeColor }}
-              onMouseEnter={(e) => e.currentTarget.style.background = dark ? 'rgba(255,255,255,0.08)' : 'rgba(37,99,235,0.06)'}
-              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
-              <ChevronLeft size={14} />
-            </button>
-            <span className="text-xs font-bold" style={{ color: dark ? 'rgba(255,255,255,0.85)' : '#334155' }}>{CAL_MONTHS[viewMonth]} {viewYear}</span>
-            <button type="button" onClick={nextM}
-              className="p-1.5 rounded-lg transition-colors"
-              style={{ color: activeColor }}
-              onMouseEnter={(e) => e.currentTarget.style.background = dark ? 'rgba(255,255,255,0.08)' : 'rgba(37,99,235,0.06)'}
-              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
-              <ChevronRight size={14} />
-            </button>
-          </div>
+          {headerNav()}
 
-          {/* Day labels */}
-          <div className="grid grid-cols-7 mb-1">
-            {CAL_DAYS.map((d) => (
-              <div key={d} className="text-center text-[10px] font-bold py-0.5" style={{ color: dark ? 'rgba(255,255,255,0.3)' : '#94a3b8' }}>{d}</div>
-            ))}
-          </div>
+          {/* ── Year picker view ── */}
+          {calView === 'year' && (
+            <div className="grid grid-cols-4 gap-1">
+              {years.map((y) => {
+                const isSel = y === viewYear;
+                const isTodayY = y === today.getFullYear();
+                return (
+                  <button
+                    key={y}
+                    type="button"
+                    onClick={() => handleSelectYear(y)}
+                    className="flex items-center justify-center text-[11px] font-semibold rounded-lg transition-all"
+                    style={{
+                      height: '32px',
+                      color: isSel ? '#fff' : isTodayY ? activeColor : dark ? 'rgba(255,255,255,0.75)' : '#374151',
+                      background: isSel ? (dark ? '#3b82f6' : '#2563eb') : isTodayY ? 'rgba(37,99,235,0.1)' : 'transparent',
+                    }}
+                    onMouseEnter={(e) => { if (!isSel) e.currentTarget.style.background = dark ? 'rgba(255,255,255,0.08)' : 'rgba(37,99,235,0.07)'; }}
+                    onMouseLeave={(e) => { if (!isSel) e.currentTarget.style.background = isTodayY ? 'rgba(37,99,235,0.1)' : 'transparent'; }}
+                  >
+                    {y}
+                  </button>
+                );
+              })}
+            </div>
+          )}
 
-          {/* Day cells */}
-          <div className="grid grid-cols-7 gap-px">
-            {cells.map((d, i) => {
-              const sel = isSelected(d);
-              const tod = isToday(d);
-              const dis = isDisabled(d);
-              return (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => handleDay(d)}
-                  disabled={!d || dis}
-                  className="flex items-center justify-center text-[11px] font-semibold rounded-lg transition-all"
-                  style={{
-                    height: '30px',
-                    color: !d ? 'transparent' : sel ? '#fff' : dis ? (dark ? 'rgba(255,255,255,0.15)' : '#d1d5db') : tod ? activeColor : dark ? 'rgba(255,255,255,0.75)' : '#374151',
-                    background: sel ? (dark ? '#3b82f6' : '#2563eb') : tod ? 'rgba(37,99,235,0.12)' : 'transparent',
-                    cursor: !d || dis ? 'default' : 'pointer',
-                  }}
-                  onMouseEnter={(e) => { if (d && !dis && !sel) e.currentTarget.style.background = dark ? 'rgba(255,255,255,0.08)' : 'rgba(37,99,235,0.07)'; }}
-                  onMouseLeave={(e) => { if (d && !dis && !sel) e.currentTarget.style.background = tod ? 'rgba(37,99,235,0.12)' : 'transparent'; }}
-                >
-                  {d || ''}
-                </button>
-              );
-            })}
-          </div>
+          {/* ── Month picker view ── */}
+          {calView === 'month' && (
+            <div className="grid grid-cols-3 gap-1">
+              {CAL_MONTHS.map((m, i) => {
+                const isSel = i === viewMonth && viewYear === (parsed?.getFullYear() ?? -1);
+                const isTodayM = i === today.getMonth() && viewYear === today.getFullYear();
+                return (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => handleSelectMonth(i)}
+                    className="flex items-center justify-center text-[11px] font-semibold rounded-lg transition-all"
+                    style={{
+                      height: '34px',
+                      color: isSel ? '#fff' : isTodayM ? activeColor : dark ? 'rgba(255,255,255,0.75)' : '#374151',
+                      background: isSel ? (dark ? '#3b82f6' : '#2563eb') : isTodayM ? 'rgba(37,99,235,0.1)' : 'transparent',
+                    }}
+                    onMouseEnter={(e) => { if (!isSel) e.currentTarget.style.background = dark ? 'rgba(255,255,255,0.08)' : 'rgba(37,99,235,0.07)'; }}
+                    onMouseLeave={(e) => { if (!isSel) e.currentTarget.style.background = isTodayM ? 'rgba(37,99,235,0.1)' : 'transparent'; }}
+                  >
+                    {m.slice(0, 3)}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* ── Day picker view ── */}
+          {calView === 'day' && (
+            <>
+              {/* Day labels */}
+              <div className="grid grid-cols-7 mb-1">
+                {CAL_DAYS.map((d) => (
+                  <div key={d} className="text-center text-[10px] font-bold py-0.5" style={{ color: dark ? 'rgba(255,255,255,0.3)' : '#94a3b8' }}>{d}</div>
+                ))}
+              </div>
+
+              {/* Day cells */}
+              <div className="grid grid-cols-7 gap-px">
+                {cells.map((d, i) => {
+                  const sel = isSelected(d);
+                  const tod = isToday(d);
+                  const dis = isDisabled(d);
+                  return (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => handleDay(d)}
+                      disabled={!d || dis}
+                      className="flex items-center justify-center text-[11px] font-semibold rounded-lg transition-all"
+                      style={{
+                        height: '30px',
+                        color: !d ? 'transparent' : sel ? '#fff' : dis ? (dark ? 'rgba(255,255,255,0.15)' : '#d1d5db') : tod ? activeColor : dark ? 'rgba(255,255,255,0.75)' : '#374151',
+                        background: sel ? (dark ? '#3b82f6' : '#2563eb') : tod ? 'rgba(37,99,235,0.12)' : 'transparent',
+                        cursor: !d || dis ? 'default' : 'pointer',
+                      }}
+                      onMouseEnter={(e) => { if (d && !dis && !sel) e.currentTarget.style.background = dark ? 'rgba(255,255,255,0.08)' : 'rgba(37,99,235,0.07)'; }}
+                      onMouseLeave={(e) => { if (d && !dis && !sel) e.currentTarget.style.background = tod ? 'rgba(37,99,235,0.12)' : 'transparent'; }}
+                    >
+                      {d || ''}
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          )}
 
           {/* Footer */}
           <div className="flex justify-between mt-2.5 pt-2.5" style={{ borderTop: `1px solid ${dark ? 'rgba(255,255,255,0.08)' : 'rgba(186,214,243,0.35)'}` }}>
-            <button type="button" onClick={() => { onChange(''); setOpen(false); }}
+            <button type="button" onClick={() => { onChange(''); setOpen(false); setCalView('day'); }}
               className="text-[11px] font-semibold px-2.5 py-1 rounded-lg transition-colors"
               style={{ color: '#ef4444' }}
               onMouseEnter={(e) => e.currentTarget.style.background = dark ? 'rgba(239,68,68,0.12)' : 'rgba(239,68,68,0.06)'}

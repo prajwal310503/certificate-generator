@@ -264,14 +264,17 @@ function AttachmentsPanel({ cert }) {
 
       {images.length > 0 && (
         <div className="flex gap-4 flex-wrap mb-3">
-          {images.map(({ label, url }) => (
-            <a key={label} href={url} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-1 group">
-              <img src={url} alt={label}
-                className="w-16 h-16 object-contain rounded-xl transition-transform group-hover:scale-105"
-                style={{ background: 'rgba(241,248,255,0.9)', border: '1px solid rgba(186,214,243,0.5)' }} />
-              <span className="text-xs text-slate-500 dark:text-white/40 group-hover:text-blue-500 transition-colors">{label}</span>
-            </a>
-          ))}
+          {images.map(({ label, url }) => {
+            const proxySrc = `${API_BASE}/api/proxy-image?url=${encodeURIComponent(url)}`;
+            return (
+              <a key={label} href={url} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-1 group">
+                <img src={proxySrc} alt={label}
+                  className="w-16 h-16 object-contain rounded-xl transition-transform group-hover:scale-105"
+                  style={{ background: 'rgba(241,248,255,0.9)', border: '1px solid rgba(186,214,243,0.5)' }} />
+                <span className="text-xs text-slate-500 dark:text-white/40 group-hover:text-blue-500 transition-colors">{label}</span>
+              </a>
+            );
+          })}
         </div>
       )}
 
