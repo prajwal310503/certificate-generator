@@ -1,0 +1,162 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    @apply font-sans antialiased;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+}
+
+@layer components {
+
+  /* ── Glass Cards ─────────────────────────────────── */
+  .glass-card {
+    @apply rounded-2xl border;
+    background: rgba(255, 255, 255, 0.85);
+    border-color: rgba(186, 214, 243, 0.5);
+    box-shadow: 0 2px 16px rgba(100, 149, 200, 0.08);
+  }
+  .dark .glass-card {
+    background: rgba(255, 255, 255, 0.04) !important;
+    border-color: rgba(255, 255, 255, 0.07) !important;
+    box-shadow: none !important;
+  }
+
+  /* ── Inputs ─────────────────────────────────────── */
+  .glass-input {
+    @apply w-full rounded-xl px-4 py-2.5 text-sm
+           focus:outline-none focus:ring-2 transition-all duration-200;
+    background: rgba(235, 246, 255, 0.7);
+    border: 1px solid rgba(147, 197, 239, 0.5);
+    color: #0f172a;
+  }
+  .glass-input::placeholder { color: #94a3b8; }
+  .glass-input:focus {
+    ring-color: rgba(59, 130, 246, 0.4);
+    border-color: rgba(59, 130, 246, 0.5);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+  }
+  .glass-input.error {
+    border-color: rgba(239, 68, 68, 0.6) !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+  }
+  .dark .glass-input {
+    background: rgba(255, 255, 255, 0.06) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    color: #f1f5f9 !important;
+  }
+  .dark .glass-input::placeholder { color: rgba(255,255,255,0.3) !important; }
+  .dark .glass-input:focus {
+    border-color: rgba(96, 165, 250, 0.5) !important;
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.12) !important;
+  }
+
+  /* ── Section card ───────────────────────────────── */
+  .section-card {
+    @apply glass-card p-5 mb-4 animate-slide-up;
+  }
+
+  /* ── Section title with orange accent line ───────── */
+  .section-title {
+    @apply text-xs font-bold mb-4 flex items-center gap-2 uppercase tracking-widest;
+    color: #334155;
+  }
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 2px;
+    background: linear-gradient(to right, #f97316 0%, rgba(249,115,22,0.25) 55%, transparent 100%);
+    border-radius: 1px;
+    margin-left: 2px;
+  }
+  .dark .section-title { color: rgba(255,255,255,0.9) !important; }
+
+  /* ── Primary button ─────────────────────────────── */
+  .btn-primary {
+    @apply px-6 py-3 rounded-xl font-semibold text-white transition-all duration-200
+           hover:scale-105 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed
+           disabled:scale-100;
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    box-shadow: 0 4px 18px rgba(37, 99, 235, 0.38);
+  }
+  .btn-primary:hover:not(:disabled) {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    box-shadow: 0 6px 24px rgba(37, 99, 235, 0.5);
+  }
+
+  /* ── Field error ─────────────────────────────────── */
+  .field-error {
+    @apply text-xs text-red-500 mt-1.5 flex items-center gap-1;
+  }
+
+  /* ── Field label ─────────────────────────────────── */
+  .field-label {
+    @apply block text-xs font-semibold mb-1.5 uppercase tracking-wide;
+    color: #475569;
+  }
+  .dark .field-label { color: rgba(255,255,255,0.55) !important; }
+}
+
+/* ── Scrollbar ──────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(37, 99, 235, 0.3);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(37, 99, 235, 0.55);
+}
+
+/* ── Page background ─────────────────────────────────── */
+.page-bg {
+  background: linear-gradient(150deg, #d1e8f8 0%, #eaf4fd 45%, #d8edf8 100%);
+}
+.dark .page-bg {
+  background: linear-gradient(150deg, #0b1528 0%, #0d1f3d 55%, #091320 100%) !important;
+}
+
+/* ── Navbar glass ─────────────────────────────────────── */
+.navbar-glass {
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(186, 214, 243, 0.45);
+  box-shadow: 0 1px 12px rgba(100, 149, 200, 0.08);
+}
+.dark .navbar-glass {
+  background: rgba(11, 21, 40, 0.92) !important;
+  border-bottom-color: rgba(255, 255, 255, 0.07) !important;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.06) !important;
+}
+
+/* ── Modal glass ─────────────────────────────────────── */
+.modal-card {
+  @apply rounded-2xl;
+  background: #ffffff;
+  border: 1px solid rgba(186, 214, 243, 0.5);
+  box-shadow: 0 24px 60px rgba(0,0,0,0.15);
+}
+.dark .modal-card {
+  background: #0f1e36 !important;
+  border-color: rgba(255,255,255,0.08) !important;
+}
+
+/* ── Certificate capture ─────────────────────────────── */
+.certificate-capture {
+  font-family: 'Times New Roman', Times, serif !important;
+}
+
+/* ── Animations ─────────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
