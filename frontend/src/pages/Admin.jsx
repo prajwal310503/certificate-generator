@@ -96,11 +96,13 @@ function getCertStatus(expiryDate) {
   return new Date(expiryDate) >= new Date() ? 'active' : 'expired';
 }
 
+const API_BASE = import.meta.env.VITE_API_URL || '';
+
 /** Fetch a remote URL via backend proxy → base64 data URL (avoids Supabase CORS). */
 async function fetchAsDataUrl(url) {
   if (!url || url.startsWith('data:')) return url;
   try {
-    const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(url)}`;
+    const proxyUrl = `${API_BASE}/api/proxy-image?url=${encodeURIComponent(url)}`;
     const resp = await fetch(proxyUrl);
     if (!resp.ok) return url;
     const blob = await resp.blob();
